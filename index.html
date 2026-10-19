@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bagagem do Campori</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a faixa azul da viagem no topo, a estrada (barra de progresso) presa logo abaixo,
+   e duas listas, Mochila e Mala, lado a lado no computador e uma embaixo da outra no celular. */
+:root {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --surface-done: #e4eaf2;
+  --ink: #17243a;
+  --ink-2: #4b5b73;
+  --band: #3b5b8a;
+  --band-ink: #ffffff;
+  --band-ink-2: #d6e0ee;
+  --blue: #3b5b8a;
+  --yellow: #f2b33d;
+  --yellow-ink: #3a2a05;
+  --red: #c4422f;
+  --track: #d5dce6;
+  --box: #8a99ae;
+  --focus: #f2b33d;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --text: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1724; --surface: #172234; --surface-done: #1d2a3f; --ink: #e9eef6; --ink-2: #a3b3c9;
+    --band: #2c4670; --band-ink: #ffffff; --band-ink-2: #c3d1e6; --blue: #6d92c8; --yellow: #f2b33d;
+    --yellow-ink: #3a2a05; --red: #e2634f; --track: #2a3850; --box: #6c7d96; --focus: #f2b33d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1724; --surface: #172234; --surface-done: #1d2a3f; --ink: #e9eef6; --ink-2: #a3b3c9;
+  --band: #2c4670; --band-ink: #ffffff; --band-ink-2: #c3d1e6; --blue: #6d92c8; --yellow: #f2b33d;
+  --yellow-ink: #3a2a05; --red: #e2634f; --track: #2a3850; --box: #6c7d96; --focus: #f2b33d;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--band);
+}
+::selection { background: var(--yellow); color: var(--yellow-ink); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+button { font: inherit; color: inherit; }
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Faixa da viagem */
+.trip { background: var(--band); color: var(--band-ink); }
+.trip .wrap { padding-block: 28px 30px; display: grid; gap: 10px; }
+.trip h1 {
+  font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 0.95;
+  font-size: clamp(2.5rem, 8vw, 5rem); margin: 0; text-wrap: balance;
+}
+.trip p { margin: 0; color: var(--band-ink-2); max-width: 60ch; font-size: 1.05rem; }
+.trip p strong { color: var(--band-ink); }
+
+/* A estrada: barra de progresso */
+.road {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+}
+.road .wrap { padding-block: 14px 12px; display: grid; gap: 8px; }
+.road-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pct {
+  font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.pct-note { color: var(--ink-2); font-size: 0.95rem; text-align: right; font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; }
+.track {
+  position: relative; height: 16px; border-radius: 999px; background: var(--track); overflow: hidden;
+}
+.fill {
+  position: absolute; inset: 0 auto 0 0; width: 100%; border-radius: 999px;
+  transform-origin: left center; transform: scaleX(0);
+  background: var(--red);
+  transition: background-color 300ms var(--ease-out);
+}
+.fill[data-level="amarelo"] { background: var(--yellow); }
+.fill[data-level="azul"], .fill[data-level="completo"] { background: var(--blue); }
+.ends { display: flex; justify-content: space-between; color: var(--ink-2); font-size: 0.9rem; }
+.done-btn {
+  display: none; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  background: var(--yellow); color: var(--yellow-ink); font-weight: 700; font-size: 0.95rem;
+  transition: transform 150ms var(--ease-out);
+}
+.done-btn:active { transform: scale(0.97); }
+.road[data-complete="true"] .done-btn { display: inline-block; }
+.road[data-complete="true"] .pct-note { display: none; }
+
+/* Abas */
+.tabs { display: flex; gap: 8px; padding-block: 18px 6px; }
+.tab {
+  border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer;
+  background: var(--surface); color: var(--ink); font-weight: 700;
+  transition: background-color 200ms var(--ease-out), transform 150ms var(--ease-out);
+}
+.tab:active { transform: scale(0.97); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.tab[aria-disabled="true"] { color: var(--ink-2); cursor: default; }
+.tab small { font-weight: 400; }
+
+/* Listas */
+.bags {
+  display: grid; gap: 40px; padding-block: 20px 64px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 960px) { .bags { grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; } }
+.bag { min-width: 0; display: grid; gap: 22px; }
+.bag-head { display: grid; gap: 6px; }
+.bag-head h2 {
+  font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 5vw, 2.75rem);
+  letter-spacing: -0.03em; line-height: 1; margin: 0; display: flex; align-items: baseline; gap: 12px;
+  flex-wrap: wrap;
+}
+.bag-count {
+  font-family: var(--display); font-size: 1.05rem; font-weight: 600; letter-spacing: 0;
+  color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+.bag-head p { margin: 0; color: var(--ink-2); max-width: 52ch; }
+
+.group { display: grid; gap: 6px; }
+.group h3 { font-family: var(--display); font-weight: 600; font-size: 1.2rem; margin: 0 0 2px; }
+.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+
+.item {
+  width: 100%; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 14px;
+  text-align: left; border: 0; cursor: pointer; padding: 12px 14px; min-height: 56px;
+  background: var(--surface); border-radius: 12px;
+  transition: background-color 200ms var(--ease-out), transform 150ms var(--ease-out);
+}
+.item:active { transform: scale(0.985); }
+@media (hover: hover) and (pointer: fine) { .item:hover .box { border-color: var(--blue); } }
+.box {
+  width: 28px; height: 28px; border-radius: 8px; border: 2.5px solid var(--box);
+  display: grid; place-items: center;
+  transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out);
+}
+.box svg { width: 18px; height: 18px; }
+.box path {
+  fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 220ms var(--ease-out);
+}
+.item-text { min-width: 0; display: grid; }
+.item-name { font-weight: 700; }
+.item-note { color: var(--ink-2); font-size: 0.92rem; line-height: 1.35; }
+.qty {
+  font-family: var(--display); font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums;
+  color: var(--blue); min-width: 2ch; text-align: right;
+}
+.item[aria-checked="true"] { background: var(--surface-done); }
+.item[aria-checked="true"] .box { background: var(--blue); border-color: var(--blue); }
+.item[aria-checked="true"] .box path { stroke-dashoffset: 0; }
+.item[aria-checked="true"] .item-name { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 2px; }
+.item[aria-checked="true"] .qty { color: var(--ink-2); }
+
+/* Extras */
+.extras { display: grid; gap: 8px; background: var(--surface); border-radius: 14px; padding: 16px; }
+.extras h3 { font-family: var(--display); font-weight: 600; font-size: 1.2rem; margin: 0; }
+.extras > p { margin: 0; color: var(--ink-2); font-size: 0.95rem; }
+.extra-form { display: flex; gap: 8px; }
+.extra-form input {
+  flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--bg);
+  border: 2px solid transparent; border-radius: 10px; padding: 10px 12px;
+}
+.extra-form input:focus { outline: none; border-color: var(--blue); }
+.extra-form button {
+  border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; font-weight: 700;
+  background: var(--blue); color: #fff; transition: transform 150ms var(--ease-out);
+}
+.extra-form button:active { transform: scale(0.97); }
+.extra-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.extra-list li {
+  display: flex; align-items: center; gap: 10px; background: var(--bg); border-radius: 10px;
+  padding: 8px 8px 8px 14px;
+}
+.extra-list span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.extra-list button {
+  border: 0; background: transparent; cursor: pointer; width: 40px; height: 40px; border-radius: 8px;
+  display: grid; place-items: center; color: var(--ink-2);
+}
+.extra-list button:hover { background: var(--surface-done); color: var(--ink); }
+.extra-list svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+.foot { padding-block: 0 48px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.reset {
+  border: 0; background: var(--surface); border-radius: 999px; padding: 10px 18px; cursor: pointer; font-weight: 700;
+}
+.reset[data-armed="true"] { background: var(--red); color: #fff; }
+
+.girls { padding-block: 24px 64px; }
+.girls h2 { font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 5vw, 2.75rem); letter-spacing: -0.03em; margin: 0 0 8px; }
+.girls p { color: var(--ink-2); margin: 0; max-width: 52ch; }
+
+/* Final: mala fechando */
+.finale {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+  background: var(--band); color: var(--band-ink);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.finale-inner { width: min(560px, 100%); display: grid; gap: 14px; justify-items: center; text-align: center; }
+.stage { width: 100%; aspect-ratio: 4 / 3; max-height: 55vh; position: relative; }
+.stage canvas, .stage svg { width: 100%; height: 100%; display: block; }
+.finale h2 {
+  font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 8vw, 3.6rem);
+  letter-spacing: -0.03em; line-height: 1; margin: 0;
+}
+.finale p { margin: 0; color: var(--band-ink-2); max-width: 36ch; }
+.finale-close {
+  border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; font-weight: 700;
+  background: var(--yellow); color: var(--yellow-ink); margin-top: 6px;
+  transition: transform 150ms var(--ease-out);
+}
+.finale-close:active { transform: scale(0.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="trip">
+  <div class="wrap">
+    <h1>Bagagem dos meninos</h1>
+    <p><strong>Campori da Divisão Sul-Americana, Barretos (SP), janeiro.</strong> Saída de Porto Velho no dia 2. São 3 dias de ônibus na ida e 3 na volta, e na estrada só a mochila é aberta.</p>
+  </div>
+</header>
+
+<div class="road" id="road" data-complete="false">
+  <div class="wrap">
+    <div class="road-top">
+      <span class="pct" id="pct" aria-hidden="true">0%</span>
+      <span class="pct-note" id="pctNote">0 de 0 itens prontos</span>
+      <button class="done-btn" id="replay" type="button">Completo · ver a mala</button>
+    </div>
+    <div class="track" role="progressbar" id="bar" aria-label="Progresso da bagagem" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="fill" id="fill" data-level="vermelho"></div>
+    </div>
+    <div class="ends" aria-hidden="true"><span>Porto Velho</span><span>Barretos</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="tabs" role="tablist" aria-label="Lista">
+    <button class="tab" role="tab" id="tab-meninos" aria-selected="true" aria-controls="painel-meninos" type="button">Meninos</button>
+    <button class="tab" role="tab" id="tab-meninas" aria-selected="false" aria-controls="painel-meninas" type="button">Meninas <small>· em breve</small></button>
+  </div>
+
+  <section id="painel-meninos" role="tabpanel" aria-labelledby="tab-meninos">
+    <div class="bags" id="bags"></div>
+    <div class="foot">
+      <span>O que você marca fica salvo neste celular.</span>
+      <button class="reset" id="reset" type="button" data-armed="false">Recomeçar a lista</button>
+    </div>
+  </section>
+
+  <section id="painel-meninas" role="tabpanel" aria-labelledby="tab-meninas" class="girls" hidden>
+    <h2>Lista das meninas</h2>
+    <p>Esta parte ainda está sendo montada. Por enquanto, use a lista dos meninos como referência.</p>
+  </section>
+</main>
+
+<div class="finale" id="finale" role="dialog" aria-modal="true" aria-labelledby="finaleTitle" hidden>
+  <div class="finale-inner">
+    <div class="stage" id="stage"></div>
+    <h2 id="finaleTitle">Checklist completo</h2>
+    <p id="finaleText">Mala fechada e mochila pronta. Nos vemos em Barretos.</p>
+    <button class="finale-close" id="finaleClose" type="button">Voltar à lista</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var LISTA = [
+    {
+      id: "mochila", nome: "Mochila",
+      intro: "Vai com você no ônibus. É tudo o que você usa nos 3 dias de ida.",
+      grupos: [
+        { nome: "Higiene", itens: [
+          ["escova", "Escova de dentes"],
+          ["pasta", "Pasta de dente"],
+          ["sabonete", "Sabonete com saboneteira"],
+          ["desodorante", "Desodorante"],
+          ["shampoo", "Shampoo"],
+          ["pente", "Pente ou escova de cabelo"],
+          ["toalha-rosto", "Toalha de rosto"],
+          ["lenco", "Papel higiênico ou lenço umedecido"]
+        ]},
+        { nome: "Remédios", itens: [
+          ["remedios", "Remédios de uso contínuo e a receita", null, "Se não usa nenhum remédio, marque assim mesmo."]
+        ]},
+        { nome: "Roupas da estrada", itens: [
+          ["cuecas", "Cuecas", 5],
+          ["camisetas", "Camisetas", 3],
+          ["bermudas", "Bermudas ou calças", 2],
+          ["meias", "Pares de meia", 3],
+          ["dormir", "Roupa de dormir", 1],
+          ["casaco", "Casaco", 1, "O ar-condicionado do ônibus é frio à noite."],
+          ["chinelo", "Chinelo"]
+        ]},
+        { nome: "Documentos e viagem", itens: [
+          ["documento", "Documento com foto", null, "RG ou certidão de nascimento."],
+          ["autorizacao", "Autorização de viagem assinada", null, "Obrigatória para menores de 16 anos sem os pais."],
+          ["sus", "Cartão do SUS ou do plano de saúde"],
+          ["biblia", "Bíblia"],
+          ["garrafa", "Garrafa de água"],
+          ["travesseiro-pescoco", "Travesseiro de pescoço ou almofada"],
+          ["manta", "Manta leve"],
+          ["carregador", "Carregador e fone de ouvido"],
+          ["lanche", "Lanche para a estrada"],
+          ["saco-sujo", "Saco para roupa suja"]
+        ]}
+      ]
+    },
+    {
+      id: "mala", nome: "Mala",
+      intro: "Vai no bagageiro e só abre em Barretos. A barraca é do clube, não precisa levar.",
+      grupos: [
+        { nome: "Para dormir na barraca", itens: [
+          ["saco-dormir", "Saco de dormir ou colchonete"],
+          ["travesseiro", "Travesseiro"],
+          ["lencol", "Lençol ou cobertor leve"]
+        ]},
+        { nome: "Uniforme", itens: [
+          ["gala", "Uniforme de gala completo", null, "Camisa, calça, cinto, lenço e prendedor."],
+          ["sapato", "Sapato preto e meias pretas"],
+          ["camiseta-clube", "Camisetas do clube", 2, "Para as atividades."]
+        ]},
+        { nome: "Roupas do acampamento", itens: [
+          ["camisetas-mala", "Camisetas", 7],
+          ["bermudas-mala", "Bermudas", 4],
+          ["calcas-mala", "Calças", 2],
+          ["cuecas-mala", "Cuecas", 8],
+          ["meias-mala", "Pares de meia", 7],
+          ["pijama", "Pijamas", 2],
+          ["capa-chuva", "Capa de chuva", 1, "Janeiro é época de chuva em Barretos."],
+          ["bone", "Boné ou chapéu"],
+          ["tenis", "Tênis"]
+        ]},
+        { nome: "Higiene e cuidados", itens: [
+          ["toalha-banho", "Toalha de banho"],
+          ["reposicao", "Sabonete e shampoo de reposição"],
+          ["protetor", "Protetor solar"],
+          ["repelente", "Repelente"]
+        ]},
+        { nome: "Acampamento", itens: [
+          ["lanterna", "Lanterna com pilhas extras"],
+          ["kit-refeicao", "Kit de refeição", null, "Prato, caneca e talheres."],
+          ["varal", "Varal e prendedores"],
+          ["sacos", "Sacos plásticos para roupa suja"]
+        ]},
+        { nome: "Para a volta", itens: [
+          ["volta", "Roupas dos 3 dias de volta separadas", null, "Passe para a mochila antes de sair de Barretos."]
+        ]}
+      ]
+    }
+  ];
+
+  var CHAVE = "bagagem-campori-meninos-v1";
+  var reduz = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var temGsap = typeof window.gsap !== "undefined";
+
+  function ler() {
+    try {
+      var bruto = localStorage.getItem(CHAVE);
+      if (bruto) {
+        var d = JSON.parse(bruto);
+        return { marcados: d.marcados || {}, extras: d.extras || { mochila: [], mala: [] } };
+      }
+    } catch (e) {}
+    return { marcados: {}, extras: { mochila: [], mala: [] } };
+  }
+  var estado = ler();
+  function salvar() {
+    try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {}
+  }
+
+  var svgCheck = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.6 3.6 7.4-8"/></svg>';
+  var svgX = '<svg viewBox="0 0 20 20" aria-hidden="true" fill="none"><path d="M5 5l10 10M15 5L5 15"/></svg>';
+
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  var bags = document.getElementById("bags");
+  var contadores = {};
+
+  LISTA.forEach(function (bolsa) {
+    var sec = el("section", "bag");
+    sec.setAttribute("aria-labelledby", "titulo-" + bolsa.id);
+    var head = el("div", "bag-head");
+    head.innerHTML = '<h2 id="titulo-' + bolsa.id + '">' + bolsa.nome + ' <span class="bag-count" id="conta-' + bolsa.id + '"></span></h2><p>' + bolsa.intro + "</p>";
+    sec.appendChild(head);
+    contadores[bolsa.id] = head.querySelector(".bag-count");
+
+    bolsa.grupos.forEach(function (g) {
+      var grp = el("div", "group");
+      grp.appendChild(el("h3", null, g.nome));
+      var ul = el("ul", "items");
+      g.itens.forEach(function (it) {
+        var id = bolsa.id + ":" + it[0];
+        var li = el("li");
+        var b = el("button", "item");
+        b.type = "button";
+        b.setAttribute("role", "checkbox");
+        b.dataset.id = id;
+        b.setAttribute("aria-checked", estado.marcados[id] ? "true" : "false");
+        b.innerHTML =
+          '<span class="box">' + svgCheck + "</span>" +
+          '<span class="item-text"><span class="item-name">' + it[1] + "</span>" +
+          (it[3] ? '<span class="item-note">' + it[3] + "</span>" : "") + "</span>" +
+          '<span class="qty">' + (it[2] ? it[2] : "") + "</span>";
+        if (it[2]) b.setAttribute("aria-label", it[1] + ", " + it[2]);
+        li.appendChild(b);
+        ul.appendChild(li);
+      });
+      grp.appendChild(ul);
+      sec.appendChild(grp);
+    });
+
+    var ex = el("div", "extras");
+    ex.innerHTML =
+      "<h3>Extras da " + bolsa.nome.toLowerCase() + "</h3>" +
+      "<p>Coisas suas que não estão na lista. Não contam no progresso.</p>" +
+      '<form class="extra-form" data-bolsa="' + bolsa.id + '">' +
+      '<label class="sr" for="extra-' + bolsa.id + '" hidden>Novo item extra</label>' +
+      '<input id="extra-' + bolsa.id + '" maxlength="60" placeholder="Ex.: violão, câmera" autocomplete="off" aria-label="Novo item extra da ' + bolsa.nome.toLowerCase() + '">' +
+      '<button type="submit">Adicionar</button></form>' +
+      '<ul class="extra-list" id="extras-' + bolsa.id + '"></ul>';
+    sec.appendChild(ex);
+    bags.appendChild(sec);
+  });
+
+  function desenharExtras(bolsaId) {
+    var ul = document.getElementById("extras-" + bolsaId);
+    var lista = estado.extras[bolsaId] || [];
+    ul.innerHTML = "";
+    lista.forEach(function (txt, i) {
+      var li = el("li");
+      li.innerHTML = "<span>" + esc(txt) + '</span><button type="button" data-i="' + i + '" aria-label="Remover ' + esc(txt) + '">' + svgX + "</button>";
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  desenharExtras("mochila");
+  desenharExtras("mala");
+
+  bags.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target;
+    var bolsaId = f.dataset.bolsa;
+    var input = f.querySelector("input");
+    var txt = input.value.trim();
+    if (!txt) { input.focus(); return; }
+    (estado.extras[bolsaId] = estado.extras[bolsaId] || []).push(txt);
+    salvar();
+    var ul = desenharExtras(bolsaId);
+    input.value = "";
+    input.focus();
+    var novo = ul.lastElementChild;
+    if (temGsap && !reduz.matches && novo) {
+      gsap.from(novo, { y: 8, opacity: 0, duration: 0.25, ease: "power2.out", clearProps: "all" });
+    }
+  });
+
+  bags.addEventListener("click", function (e) {
+    var rm = e.target.closest(".extra-list button");
+    if (rm) {
+      var bolsaId = rm.closest(".extra-list").id.replace("extras-", "");
+      estado.extras[bolsaId].splice(Number(rm.dataset.i), 1);
+      salvar();
+      desenharExtras(bolsaId);
+      return;
+    }
+    var b = e.target.closest(".item");
+    if (!b) return;
+    var id = b.dataset.id;
+    var marcado = b.getAttribute("aria-checked") !== "true";
+    b.setAttribute("aria-checked", marcado ? "true" : "false");
+    if (marcado) estado.marcados[id] = true; else delete estado.marcados[id];
+    salvar();
+    atualizar(true);
+  });
+
+  /* Progresso */
+  var fill = document.getElementById("fill");
+  var pctEl = document.getElementById("pct");
+  var note = document.getElementById("pctNote");
+  var bar = document.getElementById("bar");
+  var road = document.getElementById("road");
+  var mostrado = { v: 0 };
+  var estavaCompleto = null;
+
+  function nivel(p) {
+    if (p >= 100) return "completo";
+    if (p > 75) return "azul";
+    if (p > 25) return "amarelo";
+    return "vermelho";
+  }
+
+  function atualizar(animar) {
+    var todos = bags.querySelectorAll(".item");
+    var total = todos.length, feitos = 0;
+    var porBolsa = {};
+    todos.forEach(function (b) {
+      var bolsaId = b.dataset.id.split(":")[0];
+      porBolsa[bolsaId] = porBolsa[bolsaId] || { t: 0, f: 0 };
+      porBolsa[bolsaId].t++;
+      if (b.getAttribute("aria-checked") === "true") { feitos++; porBolsa[bolsaId].f++; }
+    });
+    Object.keys(porBolsa).forEach(function (k) {
+      contadores[k].textContent = porBolsa[k].f + " de " + porBolsa[k].t;
+    });
+    var p = total ? Math.round((feitos / total) * 100) : 0;
+    if (p === 100 && feitos < total) p = 99;
+    fill.dataset.level = nivel(p);
+    bar.setAttribute("aria-valuenow", String(p));
+    bar.setAttribute("aria-valuetext", p >= 100 ? "Completo" : p + "%");
+    note.textContent = feitos + " de " + total + " itens prontos";
+    var completo = p >= 100;
+    road.dataset.complete = completo ? "true" : "false";
+
+    var pintar = function () {
+      pctEl.textContent = completo && Math.round(mostrado.v) >= 100 ? "Completo" : Math.round(mostrado.v) + "%";
+    };
+    if (animar && temGsap && !reduz.matches) {
+      gsap.to(fill, { scaleX: p / 100, duration: 0.4, ease: "power3.out", overwrite: true });
+      gsap.to(mostrado, { v: p, duration: 0.4, ease: "power3.out", overwrite: true, onUpdate: pintar, onComplete: pintar });
+    } else {
+      fill.style.transform = "scaleX(" + p / 100 + ")";
+      mostrado.v = p;
+      pintar();
+    }
+
+    if (completo && estavaCompleto === false) abrirFinal();
+    estavaCompleto = completo;
+  }
+  atualizar(false);
+
+  /* Recomeçar, com confirmação na própria página */
+  var reset = document.getElementById("reset");
+  var resetTimer;
+  reset.addEventListener("click", function () {
+    if (reset.dataset.armed !== "true") {
+      reset.dataset.armed = "true";
+      reset.textContent = "Toque de novo para apagar as marcas";
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(function () {
+        reset.dataset.armed = "false";
+        reset.textContent = "Recomeçar a lista";
+      }, 4000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    estado.marcados = {};
+    salvar();
+    bags.querySelectorAll(".item").forEach(function (b) { b.setAttribute("aria-checked", "false"); });
+    reset.dataset.armed = "false";
+    reset.textContent = "Recomeçar a lista";
+    atualizar(true);
+  });
+
+  /* Abas */
+  var tabs = document.querySelectorAll(".tab");
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      tabs.forEach(function (o) {
+        var sel = o === t;
+        o.setAttribute("aria-selected", sel ? "true" : "false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden = !sel;
+      });
+    });
+  });
+
+  /* Final: mala 3D fechando */
+  var finale = document.getElementById("finale");
+  var stage = document.getElementById("stage");
+  var titulo = document.getElementById("finaleTitle");
+  var texto = document.getElementById("finaleText");
+  var fechar = document.getElementById("finaleClose");
+  var cena = null;
+
+  document.getElementById("replay").addEventListener("click", abrirFinal);
+  fechar.addEventListener("click", fecharFinal);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !finale.hidden) fecharFinal(); });
+
+  function abrirFinal() {
+    finale.hidden = false;
+    document.body.style.overflow = "hidden";
+    fechar.focus({ preventScroll: true });
+    stage.innerHTML = "";
+    var animado = temGsap && !reduz.matches && webglOk();
+    if (!animado) { malaParada(); return; }
+    gsap.set([titulo, texto, fechar], { opacity: 0, y: 16 });
+    carregarThree(function (ok) {
+      if (!ok || finale.hidden) { malaParada(); gsap.set([titulo, texto, fechar], { clearProps: "all" }); return; }
+      try { cena = montarMala(); }
+      catch (err) { malaParada(); gsap.set([titulo, texto, fechar], { clearProps: "all" }); }
+    });
+  }
+
+  function fecharFinal() {
+    finale.hidden = true;
+    document.body.style.overflow = "";
+    if (cena) { cena.destruir(); cena = null; }
+    stage.innerHTML = "";
+    document.getElementById("replay").focus({ preventScroll: true });
+  }
+
+  function webglOk() {
+    try {
+      var c = document.createElement("canvas");
+      return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl")));
+    } catch (e) { return false; }
+  }
+
+  var threeEstado = "nada";
+  var threeEspera = [];
+  function carregarThree(cb) {
+    if (window.THREE) return cb(true);
+    threeEspera.push(cb);
+    if (threeEstado === "carregando") return;
+    threeEstado = "carregando";
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+    s.onload = function () { threeEstado = "ok"; threeEspera.splice(0).forEach(function (f) { f(!!window.THREE); }); };
+    s.onerror = function () { threeEstado = "nada"; threeEspera.splice(0).forEach(function (f) { f(false); }); };
+    document.head.appendChild(s);
+  }
+
+  function malaParada() {
+    stage.innerHTML =
+      '<svg viewBox="0 0 400 300" role="img" aria-label="Mala fechada">' +
+      '<ellipse cx="200" cy="262" rx="150" ry="14" fill="#000" opacity=".18"/>' +
+      '<rect x="150" y="48" width="100" height="34" rx="14" fill="none" stroke="#1d2f4d" stroke-width="14"/>' +
+      '<rect x="70" y="76" width="260" height="180" rx="22" fill="#f2b33d"/>' +
+      '<rect x="70" y="76" width="260" height="40" rx="18" fill="#f6c565"/>' +
+      '<rect x="120" y="76" width="18" height="180" fill="#1d2f4d"/>' +
+      '<rect x="262" y="76" width="18" height="180" fill="#1d2f4d"/>' +
+      '<rect x="182" y="108" width="36" height="18" rx="4" fill="#1d2f4d"/>' +
+      '<path d="M178 168l16 16 30-32" fill="none" stroke="#1d2f4d" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>' +
+      "</svg>";
+  }
+
+  function montarMala() {
+    var T = window.THREE;
+    var celular = window.innerWidth < 700;
+    var renderer = new T.WebGLRenderer({ antialias: !celular, alpha: true, powerPreference: "low-power" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, celular ? 1.5 : 2));
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    stage.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute("aria-label", "Mala fechando");
+    renderer.domElement.setAttribute("role", "img");
+
+    var scene = new T.Scene();
+    var camera = new T.PerspectiveCamera(35, w / h, 0.1, 100);
+    camera.position.set(0, 4.1, 5.4);
+    camera.lookAt(0, 0.35, 0);
+
+    scene.add(new T.HemisphereLight(0xffffff, 0x2c4670, 0.55));
+    var sol = new T.DirectionalLight(0xffffff, 0.6);
+    sol.position.set(3, 6, 4);
+    scene.add(sol);
+
+    var mats = [];
+    function mat(cor) { var m = new T.MeshStandardMaterial({ color: cor, roughness: 0.6, metalness: 0.05 }); mats.push(m); return m; }
+    var azul = mat(0xf2b33d), azulEsc = mat(0x1d2f4d), amarelo = mat(0x1d2f4d);
+    var geos = [];
+    function caixa(lx, ly, lz, m, x, y, z, pai) {
+      var g = new T.BoxGeometry(lx, ly, lz); geos.push(g);
+      var mesh = new T.Mesh(g, m); mesh.position.set(x, y, z); pai.add(mesh); return mesh;
+    }
+
+    var mala = new T.Group();
+    scene.add(mala);
+    var L = 3.0, P = 2.0, A = 0.55, e = 0.08;
+
+    // fundo (casco de baixo, aberto em cima)
+    caixa(L, e, P, azul, 0, e / 2, 0, mala);
+    caixa(L, A, e, azul, 0, A / 2, P / 2 - e / 2, mala);
+    caixa(L, A, e, azul, 0, A / 2, -P / 2 + e / 2, mala);
+    caixa(e, A, P, azul, L / 2 - e / 2, A / 2, 0, mala);
+    caixa(e, A, P, azul, -L / 2 + e / 2, A / 2, 0, mala);
+    var forro = new T.MeshStandardMaterial({ color: 0x8a5c12, roughness: 0.9 }); mats.push(forro);
+    caixa(L - 2 * e, 0.02, P - 2 * e, forro, 0, e + 0.01, 0, mala);
+
+    // roupas dobradas dentro
+    var cores = [0xf4efe4, 0x3b5b8a, 0xffffff, 0x8fb0d8, 0xe9e2d0, 0x2c4670];
+    var pos = [[-0.85, -0.4], [0, -0.4], [0.85, -0.4], [-0.85, 0.42], [0, 0.42], [0.85, 0.42]];
+    pos.forEach(function (p, i) {
+      var m = mat(cores[i]);
+      caixa(0.78, 0.18 + (i % 3) * 0.06, 0.74, m, p[0], e + 0.12 + (i % 3) * 0.03, p[1], mala);
+    });
+
+    // tampa articulada na borda de trás
+    var dobradica = new T.Group();
+    dobradica.position.set(0, A, -P / 2);
+    mala.add(dobradica);
+    var tampa = new T.Group();
+    tampa.position.set(0, 0, P / 2);
+    dobradica.add(tampa);
+    var Ht = 0.32;
+    caixa(L, e, P, azul, 0, Ht - e / 2, 0, tampa);
+    caixa(L, Ht, e, azul, 0, Ht / 2, P / 2 - e / 2, tampa);
+    caixa(L, Ht, e, azul, 0, Ht / 2, -P / 2 + e / 2, tampa);
+    caixa(e, Ht, P, azul, L / 2 - e / 2, Ht / 2, 0, tampa);
+    caixa(e, Ht, P, azul, -L / 2 + e / 2, Ht / 2, 0, tampa);
+    // faixas amarelas na tampa e alça
+    caixa(0.22, 0.02, P + 0.02, amarelo, -0.8, Ht + 0.005, 0, tampa);
+    caixa(0.22, 0.02, P + 0.02, amarelo, 0.8, Ht + 0.005, 0, tampa);
+    caixa(0.9, 0.08, 0.1, amarelo, 0, Ht / 2, P / 2 + 0.12, tampa);
+    caixa(0.08, 0.08, 0.16, amarelo, -0.41, Ht / 2, P / 2 + 0.06, tampa);
+    caixa(0.08, 0.08, 0.16, amarelo, 0.41, Ht / 2, P / 2 + 0.06, tampa);
+    // faixas no casco de baixo
+    caixa(0.22, A, 0.02, amarelo, -0.8, A / 2, P / 2 + 0.005, mala);
+    caixa(0.22, A, 0.02, amarelo, 0.8, A / 2, P / 2 + 0.005, mala);
+
+    // travas que viram depois de fechar
+    var travas = [];
+    [-0.35, 0.35].forEach(function (x) {
+      var tr = new T.Group();
+      tr.position.set(x, A + 0.02, P / 2 + 0.03);
+      mala.add(tr);
+      caixa(0.22, 0.2, 0.05, azulEsc, 0, 0, 0.0, tr);
+      travas.push(tr);
+    });
+
+    // sombra simples no chão
+    var sombraGeo = new T.CircleGeometry(1, 40); geos.push(sombraGeo);
+    var sombraMat = new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }); mats.push(sombraMat);
+    var sombra = new T.Mesh(sombraGeo, sombraMat);
+    sombra.rotation.x = -Math.PI / 2; sombra.scale.set(2.1, 1.45, 1); sombra.position.y = 0.001;
+    scene.add(sombra);
+
+    var aberta = -1.95;
+    dobradica.rotation.x = aberta;
+    travas.forEach(function (t) { t.rotation.x = -1.3; t.visible = false; });
+    mala.rotation.y = -0.35;
+
+    function render() { renderer.render(scene, camera); }
+    gsap.ticker.add(render);
+
+    var tl = gsap.timeline({ delay: 0.25 });
+    tl.to(mala.rotation, { y: 0.25, duration: 2.2, ease: "power2.out" }, 0)
+      .to(dobradica.rotation, { x: 0, duration: 0.75, ease: "power2.in" }, 0.35)
+      .to(dobradica.rotation, { x: -0.07, duration: 0.12, ease: "power1.out" })
+      .to(dobradica.rotation, { x: 0, duration: 0.14, ease: "power1.in" })
+      .add(function () { travas.forEach(function (t) { t.visible = true; }); })
+      .to(travas[0].rotation, { x: 0, duration: 0.22, ease: "back.out(2)" })
+      .to(travas[1].rotation, { x: 0, duration: 0.22, ease: "back.out(2)" }, "-=0.12")
+      .to(mala.position, { y: 0.18, duration: 0.2, ease: "power2.out" }, "+=0.05")
+      .to(mala.position, { y: 0, duration: 0.25, ease: "power2.in" })
+      .to([titulo, texto, fechar], { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.07 }, "-=0.2")
+      .add(function () { gsap.ticker.remove(render); render(); });
+
+    function onResize() {
+      var w2 = stage.clientWidth, h2 = stage.clientHeight;
+      if (!w2 || !h2) return;
+      renderer.setSize(w2, h2, false);
+      camera.aspect = w2 / h2; camera.updateProjectionMatrix(); render();
+    }
+    window.addEventListener("resize", onResize);
+
+    return {
+      destruir: function () {
+        tl.kill();
+        gsap.ticker.remove(render);
+        window.removeEventListener("resize", onResize);
+        gsap.set([titulo, texto, fechar], { clearProps: "all" });
+        geos.forEach(function (g) { g.dispose(); });
+        mats.forEach(function (m) { m.dispose(); });
+        renderer.dispose();
+      }
+    };
+  }
+})();
+</script>
+</body>
+</html>
